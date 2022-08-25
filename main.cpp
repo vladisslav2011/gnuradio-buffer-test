@@ -170,10 +170,22 @@ public:
 //        std::cerr<<"hist_block::work "<<nitems_read(0)<<","<<nitems_written(0)<<"\n";
         for (size_t n = 0; n < noutput_items; n++)
         {
-            o[n] = i[n+history()];
+            o[n] = i[n + history() - d_delay];
         }
         return noutput_items;
     }
+    unsigned get_delay()
+    {
+        return d_delay;
+    }
+    void set_delay(unsigned delay)
+    {
+        d_delay = delay;
+        if(d_delay >= history())
+            d_delay = history() - 1;
+    }
+private:
+    unsigned d_delay{0};
 };
 
 constexpr int CONNECT_SINK        = 0x00000001;
@@ -190,6 +202,8 @@ constexpr int REMOVE_LARGE_ALIGN  = 0x00000400;
 constexpr int CHANGE_LARGE_HIST   = 0x00000800;
 constexpr int CHANGE_SMALL_HIST   = 0x00001000;
 constexpr int NO_HISTORY          = 0x00002000;
+constexpr int DELAY               = 0x00004000;
+constexpr int DELAY_DECL          = 0x00008000;
 
 constexpr unsigned src_item_count = 1000000;
 constexpr unsigned test_item_diff =   50000;
@@ -216,6 +230,10 @@ void do_the_test(int t, std::string descr)
     src->set_tag_interval(101);
     if(!t&NO_HISTORY)
         cpy->set_history(5000);
+    if(t&DELAY)
+        cpy->set_delay(2000);
+    if(t&DELAY_DECL)
+        cpy->declare_sample_delay(2000);
 
     std::cout<<"\n                "<<descr<<"\n";
     tb->connect(src, 0, cpy, 0);
@@ -332,5 +350,7 @@ int main()
     do_the_test(ADD_LARGE_ALIGN,"Add a sink with a large alignment\n");
     do_the_test(REMOVE_LARGE_ALIGN,"Remove a sink with a large alignment\n");
     do_the_test(CHANGE_PROC|NO_HISTORY,"Change processing block without a history\n");
+    do_the_test(CONNECT_SINK|DELAY,"Connect sink, processing block with undeclared delay\n");
+    do_the_test(CONNECT_SINK|DELAY|DELAY_DECL,"Connect sink, processing block with declared delay\n");
     return 0;
 }
