@@ -182,7 +182,7 @@ public:
     {
         d_delay = delay;
         if(d_delay >= history())
-            d_delay = history() - 1;
+            d_delay=history() - 1;
     }
 private:
     unsigned d_delay{0};
@@ -228,7 +228,7 @@ void do_the_test(int t, std::string descr)
     hist_block::sptr cpy = hist_block::make();
     src->set_output_multiple(100);
     src->set_tag_interval(101);
-    if(!t&NO_HISTORY)
+    if(!(t&NO_HISTORY))
         cpy->set_history(5000);
     if(t&DELAY)
         cpy->set_delay(2000);
